@@ -1,0 +1,271 @@
+import math
+import numpy as np
+import numbers
+from utils.constants import Constants as consts
+
+def extract(cond, x):
+    if isinstance(x, numbers.Number):
+        return x
+    else:
+        return np.extract(cond, x)
+
+
+class Vector:
+    """A 3-dimensional object that represents a point in space"""
+
+    def __init__(self, x=0., y=0., z=0.):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __str__(self):
+        # Used for debugging. This method is called when you print an instance  
+        return "<" + str(self.x) + ", " + str(self.y) + ", " + str(self.z) + ">"
+
+    def __repr__(self):
+        return f"Vector <{self.x!r},{self.y!r},{self.z!r}>"
+
+    def __setitem__(self, key, value):
+        if isinstance(key, int) and (isinstance(value, int) or isinstance(value, numbers.Number)):
+            if key == 0:
+                self.x = value
+            elif key == 1:
+                self.y = value
+            elif key == 2:
+                self.z = value
+        elif isinstance(key, str) and (isinstance(value, int) or isinstance(value, numbers.Number)):
+            if key == 'x':
+                self.x = value
+            elif key == 'y':
+                self.y = value
+            elif key == 'z':
+                self.z = value
+        else:
+            raise ValueError(f"The key: {key} and value: {value} is invalid. Either use an integer or string for the key and use float value for the value field")
+        
+
+    def __getitem__(self, item):
+      if isinstance(item, int):
+            if item == 0:
+                return self.x
+            elif item == 1:
+                return self.y
+            elif item == 2:
+                return self.z
+            else:
+                raise IndexError(f"The provided index: {item} is invalid. Please provide [0, 1, 2] only")
+      elif isinstance(item, str):
+            if item == 'x':
+                return self.x
+            elif item == 'y':
+                return self.y
+            elif item == 'z':
+                return self.z
+            raise IndexError(f"The provided index name: {item} is invalid. Please provide either 'x','y','z'")
+
+    def __add__(self, v):
+        if isinstance(v, Vector):
+            return Vector(self.x + v.x, self.y + v.y, self.z + v.z)
+        elif isinstance(v, numbers.Number):
+            return Vector(self.x + v, self.y + v, self.z + v)
+        elif isinstance(v, np.ndarray):
+            return Vector(self.x + v[0], self.y + v[1], self.z + v[2])
+
+    def __radd__(self, v):
+        if isinstance(v, Vector):
+            return Vector(self.x + v.x, self.y + v.y, self.z + v.z)
+        elif isinstance(v, numbers.Number):
+            return Vector(self.x + v, self.y + v, self.z + v)
+        elif isinstance(v, np.ndarray):
+            return Vector(self.x + v[0], self.y + v[1], self.z + v)[2]
+
+    def __sub__(self, v):
+        if isinstance(v, Vector):
+            return Vector(self.x - v.x, self.y - v.y, self.z - v.z)
+        elif isinstance(v, numbers.Number):
+            return Vector(self.x - v, self.y - v, self.z - v)
+        elif isinstance(v, np.ndarray):
+            return Vector(self.x - v[0], self.y - v[1], self.z - v[2])
+
+    def __rsub__(self, v):
+        if isinstance(v, Vector):
+            return Vector(v.x - self.x, v.y - self.y, v.z - self.z)
+        elif isinstance(v, numbers.Number):
+            return Vector(v - self.x, v - self.y, v - self.z)
+        elif isinstance(v, np.ndarray):
+            return Vector(v[0] - self.x, v[1]-self.y, v[2] - self.z)
+
+    def __mul__(self, v):
+        if isinstance(v, Vector):
+            return Vector(self.x * v.x, self.y * v.y, self.z * v.z)
+        elif isinstance(v, numbers.Number):
+            return Vector(self.x * v, self.y * v, self.z * v)
+        elif isinstance(v, np.ndarray):
+            return Vector(self.x * v[0], self.y * v[1], self.z * v[2])
+
+    def __rmul__(self, v):
+        if isinstance(v, Vector):
+            return Vector(v.x * self.x, v.y * self.y, v.z * self.z)
+        elif isinstance(v, numbers.Number):
+            return Vector(v * self.x, v * self.y, v * self.z)
+        elif isinstance(v, np.ndarray):
+            return Vector(v[0] * self.x, v[1] * self.y, v[2] * self.z)
+
+    def __truediv__(self, v):
+        if isinstance(v, Vector):
+            return Vector(self.x / v.x, self.y / v.y, self.z / v.z)
+        elif isinstance(v, numbers.Number) or isinstance(v, np.ndarray):
+            return Vector(self.x / v, self.y / v, self.z / v)
+        elif isinstance(v, np.ndarray):
+            return Vector(self.x / v[0], self.y / v[1], self.z / v[2])
+
+    def __rtruediv__(self, v):
+        if isinstance(v, Vector):
+            return Vector(v.x / self.x, v.y / self.y, v.z / self.z)
+        elif isinstance(v, numbers.Number):
+            return Vector(v / self.x, v / self.y, v / self.z)
+        elif isinstance(v, np.ndarray):
+            return Vector(v[0] / self.x, v[1] / self.y, v[2] / self.z)
+
+    def __abs__(self):
+        return Vector(np.abs(self.x), np.abs(self.y), np.abs(self.z))
+
+    @staticmethod
+    def real(v):
+        return Vector(np.real(v.x), np.real(v.y), np.real(v.z))
+
+    @staticmethod
+    def imag(v):
+        return Vector(np.imag(v.x), np.imag(v.y), np.imag(v.z))
+
+    def yzx(self):
+        return Vector(self.y, self.z, self.x)
+
+    def xyz(self):
+        return Vector(self.x, self.y, self.z)
+
+    def zxy(self):
+        return Vector(self.z, self.x, self.y)
+
+    def average(self):
+        return (self.x + self.y + self.z) / 3
+
+    def near_zero(self):
+        s = 1e-8
+        return (math.fabs(self.x) and math.fabs(self.y) and math.fabs(self.z)) < s
+
+    def matmul(self, matrix):
+        if isinstance(self.x, numbers.Number):
+            return array_to_vec3(np.dot(matrix, self.to_array()))
+        elif isinstance(self.x, np.ndarray):
+            return array_to_vec3(np.tensordot(matrix, self.to_array(), axes=([1, 0])))
+
+    def change_basis(self, new_basis):
+        return Vector(self.dot(new_basis[0]), self.dot(new_basis[1]), self.dot(new_basis[2]))
+
+    def __pow__(self, a):
+        return Vector(self.x ** a, self.y ** a, self.z ** a)
+
+    def dot(self, v):
+
+        return self.x * v.x + self.y * v.y + self.z * v.z
+
+    @staticmethod
+    def exp(v):
+        return Vector(np.exp(v.x), np.exp(v.y), np.exp(v.z))
+
+    @staticmethod
+    def sqrt(v):
+        if isinstance(v, Vector):
+            return Vector(np.sqrt(v.x), np.sqrt(v.y), np.sqrt(v.z))
+        elif isinstance(v, np.ndarray):
+            return Vector(np.sqrt(v.x), np.sqrt(v.y), np.sqrt(v.z))
+        else:
+            raise ValueError(f"Invalid argument: {v} of type {type(v)}")
+
+    def to_array(self):
+        return np.array([self.x, self.y, self.z])
+
+    def cross(self, v):
+        if isinstance(v, Vector):
+            return Vector(self.y * v.z - self.z * v.y, -self.x * v.z + self.z * v.x, self.x * v.y - self.y * v.x)
+        elif isinstance(v, np.ndarray):
+            return Vector(self.y * v[0] - self.z * v[1], -self.x * v[2]+ self.z * v[0], self.x * v[1] - self.y * v[0])
+        else:
+            raise ValueError(f"Invalid argument: {v} of type {type(v)}")
+
+    def length(self):
+        return np.sqrt(self.dot(self))
+
+    def square_length(self):
+        return self.dot(self)
+
+    def normalize(self):
+        mag = self.length()
+        return self * (1.0 / np.where(mag == 0, 1, mag))
+
+    def components(self):
+        return self.x, self.y, self.z
+
+    def extract(self, cond):
+        return Vector(extract(cond, self.x),
+                      extract(cond, self.y),
+                      extract(cond, self.z))
+
+    @staticmethod
+    def where(cond, out_true, out_false):
+        return Vector(np.where(cond, out_true.x, out_false.x),
+                      np.where(cond, out_true.y, out_false.y),
+                      np.where(cond, out_true.z, out_false.z))
+
+    @staticmethod
+    def select(mask_list, out_list):
+        out_list_x = [i.x for i in out_list]
+        out_list_y = [i.y for i in out_list]
+        out_list_z = [i.z for i in out_list]
+
+        return Vector(np.select(mask_list, out_list_x),
+                      np.select(mask_list, out_list_y),
+                      np.select(mask_list, out_list_z))
+
+    def clip(self, min, max):
+        return Vector(np.clip(self.x, min, max),
+                      np.clip(self.y, min, max),
+                      np.clip(self.z, min, max))
+
+    def place(self, cond):
+        r = Vector(np.zeros(cond.shape), np.zeros(cond.shape), np.zeros(cond.shape))
+        np.place(r.x, cond, self.x)
+        np.place(r.y, cond, self.y)
+        np.place(r.z, cond, self.z)
+        return r
+
+    def repeat(self, n):
+        return Vector(np.repeat(self.x, n), np.repeat(self.y, n), np.repeat(self.z, n))
+
+    def reshape(self, *newshape):
+        return Vector(self.x.reshape(*newshape), self.y.reshape(*newshape), self.z.reshape(*newshape))
+
+    def shape(self, *newshape):
+        if isinstance(self.x, numbers.Number):
+            return 1
+        elif isinstance(self.x, np.ndarray):
+            return self.x.shape
+
+    def mean(self, axis):
+        return Vector(np.mean(self.x, axis=axis), np.mean(self.y, axis=axis), np.mean(self.z, axis=axis))
+
+    def __eq__(self, other):
+        if isinstance(other, Vector):
+            return math.fabs(self.x - other.x) < consts.EPSILON \
+                   & math.fabs(self.y - other.y) < consts.EPSILON \
+                    & math.fabs(self.z - other.z) < consts.EPSILON
+
+        elif isinstance(other, np.ndarray):
+           return math.fabs(self.x - other.x) < consts.EPSILON \
+                   & math.fabs(self.y - other.y) < consts.EPSILON \
+                    & math.fabs(self.z - other.z) < consts.EPSILON
+        else:
+            raise ValueError(f"Expected type Vector got: {type(other)}")
+
+Point = Vector
